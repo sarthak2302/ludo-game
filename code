@@ -1,0 +1,336 @@
+import pygame
+import random
+import time
+
+pygame.init()
+win=pygame.display.set_mode((500,500))
+win.fill((255,255,255))
+
+def call_update():
+   red_token.draw(win)
+   green_token.draw(win)
+   blue_token.draw(win)
+   yellow_token.draw(win)
+   pygame.display.update()
+
+class area():
+   def __init__(self):
+      
+      #small rectangles for safe
+      dict1={(130,130,255):(203,433,32,33),(255,0,0):(35,204,33,31),(0,255,0):(265,35,31,33),(255,255,0):(433,266,33,30)}
+      for i,j in dict1.items():
+         pygame.draw.rect(win,i,j)
+         pygame.draw.circle(win,(0,0,0),(j[0]+16,j[1]+16),5,1)
+      for i in [(265,399,31,32),(69,266,33,30),(204,69,32,33),(399,203,33,32)]:
+         pygame.draw.rect(win,[255, 229,180],i)
+         pygame.draw.circle(win,(0,0,0),(i[0]+16,i[1]+16),5,1)
+      ########
+      
+      #safe line line for token
+      inner_line={(0,255,0):(236,35,30,169),(255,255,0):(297,236,169,30),(255,0,0):(35,236,169,30),(130,130,255):(236,297,30,169)}
+      for i,j in inner_line.items():
+         pygame.draw.rect(win,i,j)
+      #######
+         
+
+      #for check lines
+      
+      for k in range(0,7):
+         pygame.draw.line(win,(0,0,0),(k*34,0),(k*34,500))
+         pygame.draw.line(win,(0,0,0),(k*34+296,0),(k*34+296,500))
+         pygame.draw.line(win,(0,0,0),(0,k*34),(500,k*34))
+         pygame.draw.line(win,(0,0,0),(0,k*34+296),(500,k*34+296))
+      for i in [0,31,62,92]:
+         pygame.draw.line(win,(0,0,0),(204+i,0),(204+i,500))
+         pygame.draw.line(win,(0,0,0),(0,204+i),(500,204+i))
+      ###############
+
+      #center rectangle
+      pygame.draw.rect(win,(150,150,150),(205,205,91,91))
+      #######
+         
+
+      
+
+      #rectagle for corners
+      global corner_dict
+      corner_dict={(1,1,203,203):(200,0,0),(297,1,203,203):(0,200,0),(1,297,203,203):(130,130,200),(297,297,203,203):(200,200,0),
+                (40,40,123,123):(255,255,255),(336,40,124,124):(255,255,255),(40,336,124,124):(255,255,255),(336,336,124,124):(255,255,255)}
+      
+      for i,j in corner_dict.items():
+         pygame.draw.rect(win,j,i)
+      ###########
+
+
+
+class token():
+   def __init__(self,color_text):
+      positions()
+      self.color_info={}
+      self.token_names=[]
+      self.p=0
+      for x in range(0,4):
+         if color_text=='red':
+            self.color_info['token'+str(x+1)]=[0,red[0]['token'+str(x+1)][0],red[0]['token'+str(x+1)][1],self.p,color_text]    #opened or not or passed 012/x/y/position/color_name
+            self.color=(180,0,0)
+         elif color_text=='blue':
+            self.color_info['token'+str(x+1)]=[0,blue[0]['token'+str(x+1)][0],blue[0]['token'+str(x+1)][1],self.p,color_text]
+            self.color=(100,100,180)
+         elif color_text=='green':
+            self.color_info['token'+str(x+1)]=[0,green[0]['token'+str(x+1)][0],green[0]['token'+str(x+1)][1],self.p,color_text]
+            self.color=(0,180,0)
+         elif color_text=='yellow':
+            self.color_info['token'+str(x+1)]=[0,yellow[0]['token'+str(x+1)][0],yellow[0]['token'+str(x+1)][1],self.p,color_text]
+            self.color=(180,180,0)
+         self.token_names.append('token'+str(x+1))
+        
+   def draw(self,win):
+      for i in range(1,5):
+         pygame.draw.circle(win,self.color,(self.color_info['token'+str(i)][1],self.color_info['token'+str(i)][2]),10)
+         
+   def check_open(self):
+      global zo,zc,zp
+      zo=[]
+      zc=[]
+      zp=[]
+      for k in self.token_names:
+         try:
+            if self.color_info[k][0]==0:
+               zc.append(k)
+            elif self.color_info[k][0]==1:
+               zo.append(k)
+            elif self.color_info[k][0]==2:
+               zp.append(k)
+         except:
+            pass
+   
+   def move(self,num,color):
+      rip=True
+      data=[]
+      def moving_token(token):
+         i=color
+         if num==6 and self.color_info[token][0]==0:
+            self.color_info[token][0]=1
+            self.color_info[token][-2]=1
+            self.color_info[token][1]=i[self.color_info[token][-2]][0]         
+            self.color_info[token][2]=i[self.color_info[token][-2]][1]
+            exit=[False,'rep']
+            return exit
+         
+         elif self.color_info[token][0]==1 and self.color_info[token][3]<51:
+            self.color_info[token][3]=self.color_info[token][3]+num
+            self.color_info[token][1]=i[self.color_info[token][3]][0]
+            self.color_info[token][2]=i[self.color_info[token][3]][1]
+            exit=[False,'norep']
+            ##to cut##
+
+            p=0
+            for j in [1,9,14,22,27,35,40,48]: #check if its on safe marks
+               if self.color_info[token][1]==red[j][0] and self.color_info[token][2]==red[j][1]:
+                  p=1
+            if p==0:
+               m=['yellow','blue','green','red']
+               m.remove(self.color_info[token][-1])
+               
+               for k in self.token_names:
+                  for z in m:
+                     if z=='red':
+                        if self.color_info[token][1]==red_token.color_info[k][1] and self.color_info[token][2]==red_token.color_info[k][2]:
+                           red_token.color_info[k][-2]=0
+                           red_token.color_info[k][1]=red[0][k][0]
+                           red_token.color_info[k][2]=red[0][k][1]
+                           red_token.color_info[k][0]=0
+                           exit=[False,'rep']
+                     elif z=='blue':
+                        if self.color_info[token][1]==blue_token.color_info[k][1] and self.color_info[token][2]==blue_token.color_info[k][2]:
+                           blue_token.color_info[k][-2]=0
+                           blue_token.color_info[k][1]=blue[0][k][0]
+                           blue_token.color_info[k][2]=blue[0][k][1]
+                           blue_token.color_info[k][0]=0
+                           exit=[False,'rep']
+                     elif z=='green':
+                        if self.color_info[token][1]==green_token.color_info[k][1] and self.color_info[token][2]==green_token.color_info[k][2]:
+                           green_token.color_info[k][-2]=0
+                           green_token.color_info[k][1]=green[0][k][0]
+                           green_token.color_info[k][2]=green[0][k][1]
+                           green_token.color_info[k][0]=0
+                           exit=[False,'rep']
+                     elif z=='yellow':
+                        if self.color_info[token][1]==yellow_token.color_info[k][1] and self.color_info[token][2]==yellow_token.color_info[k][2]:
+                           yellow_token.color_info[k][-2]=0
+                           yellow_token.color_info[k][1]=yellow[0][k][0]
+                           yellow_token.color_info[k][2]=yellow[0][k][1]
+                           yellow_token.color_info[k][0]=0
+                           exit=[False,'rep']
+                              
+                     else:
+                        exit=[False,'norep']
+      
+            if num==6:
+               exit[1]='rep'
+               
+            return exit 
+               
+         elif self.color_info[token][3]>=51 and num<=57-self.color_info[token][3]:
+            self.check_open()
+            if num<=(57-self.color_info[token][3]):
+               self.color_info[token][3]+=num
+               self.color_info[token][1]=i[self.color_info[token][3]][0]
+               self.color_info[token][2]=i[self.color_info[token][3]][1]
+               print(self.color_info[token][1],self.color_info[token][2])
+               exit=[False,'norep']
+            else:
+               if zo==1:
+                  exit=[False,'norep']
+                  print('inside 1')
+               else:
+                  exit=[True,'norep']
+                  print('inside 2')
+            if self.color_info[token][3]==57:
+               self.color_info[token][0]=2
+               self.token_names.remove(token)
+               exit[1]='rep'
+               
+            return exit
+         else:
+            exit=[True,'norep']
+            return exit
+         
+   
+      self.check_open()
+      if len(zo)==0 and num<6 :
+         return 'norep'
+      if len(zo)==1 and num<6:   #for auto movement if only one is open
+         token=zo[0]
+         data=moving_token(token)
+      else:
+         while rip:
+            ev = pygame.event.get()
+            for events in ev:
+               if events.type==pygame.MOUSEBUTTONDOWN:
+                  xm,ym=pygame.mouse.get_pos()                  
+
+                  for t in self.token_names:
+                     if xm>self.color_info[t][1]-10 and xm<self.color_info[t][1]+10 and ym>self.color_info[t][2]-10 and ym<self.color_info[t][2]+10:
+                        token=t
+                        data=moving_token(token)
+                        rip=data[0]
+                        break #so that further loop doesnt continue else all tokens at same place will move simultaneously
+                     else:
+                        pass
+                     
+            
+      return data[1]
+   
+def positions():
+   global red,green,blue,yellow
+   red={}
+   r=0
+   for i in ({'token1':[80,80],'token2':[80,120],'token3':[120,80],'token4':[120,120]},
+             [51,220 ],[85,220 ],[119,220],[153,220],[187,220],[220,187],[220,153],[220,120],[220,86 ],
+             [220,52 ],[220,18 ],[251,17 ],[282,18 ],[282,52 ],[282,86 ],[282,120],[282,153],[282,187],
+             [314,220],[348,220],[382,220],[415,220],[449,220],[484,220],[484,250],[484,281],[449,281],
+             [415,281],[382,281],[348,281],[314,281],[282,314],[282,348],[282,382],[282,415],[282,449],
+             [282,482],[251,482],[220,482],[220,449],[220,415],[220,382],[220,348],[220,314],[187,281],
+             [153,281],[119,281],[85,281 ],[51,281 ],[17,281 ],[17,250 ],[51,250 ],[85,250 ],[119,250],
+             [153,250],[187,250],[216,250]):
+      red[r]=i
+      r+=1
+
+   green={}
+   g=0
+   for i in ({'token1':[375,80],'token2':[375,120],'token3':[415,80],'token4':[415,120]},
+             [282,52] ,[282,86] ,[282,120],[282,153],[282,187],[314,220],[348,220],[382,220],[415,220],
+             [449,220],[484,220],[484,250],[484,281],[449,281],[415,281],[382,281],[348,281],[314,281],
+             [282,314],[282,348],[282,382],[282,415],[282,449],[282,482],[251,482],[220,482],[220,449],
+             [220,415],[220,382],[220,348],[220,314],[187,281],[153,281],[119,281],[85,281 ],[51,281 ],
+             [17,281 ],[17,250 ],[17,220 ],[51,220 ],[85,220 ],[119,220],[153,220],[187,220],[220,187],
+             [220,153],[220,120],[220,86 ],[220,52 ],[220,18 ],[251,17 ],[251,52 ],[251,86 ],[251,120],
+             [251,153],[251,187],[251,216]):    
+      green[g]=(i)
+      g+=1
+            
+   
+   
+   
+   yellow={}
+   y=0
+   for i in ({'token1':[375,375],'token2':[375,415],'token3':[415,375],'token4':[415,415]},
+             [449,281],[415,281],[382,281],[348,281],[314,281],[282,314],[282,348],[282,382],[282,415],
+             [282,449],[282,482],[251,482],[220,482],[220,449],[220,415],[220,382],[220,348],[220,314],
+             [187,281],[153,281],[119,281],[85,281 ],[51,281 ],[17,281 ],[17,250 ],[17,220 ],[51,220 ],
+             [85,220 ],[119,220],[153,220],[187,220],[220,187],[220,153],[220,120],[220,86 ],[220,52 ],
+             [220,18 ],[251,17 ],[282,18 ],[282,52 ],[282,86 ],[282,120],[282,153],[282,187],[314,220],
+             [348,220],[382,220],[415,220],[449,220],[484,220],[484,250],[449,250],[415,250],[382,250],
+             [348,250],[314,250],[285,251]):
+       yellow[y]=(i)
+       y+=1
+
+       
+   blue={}
+   b=0
+   for i in ({'token1':[80,375],'token2':[80,415],'token3':[120,375],'token4':[120,415]},
+             [220,449],[220,415],[220,382],[220,348],[220,314],[187,281],[153,281],[119,281],[85,281 ],
+             [51,281 ],[17,281 ],[17,250 ],[17,220 ],[51,220 ],[85,220 ],[119,220],[153,220],[187,220],
+             [220,187],[220,153],[220,120],[220,86 ],[220,52 ],[220,18 ],[251,17 ],[282,18 ],[282,52 ],
+             [282,86 ],[282,120],[282,153],[282,187],[314,220],[348,220],[382,220],[415,220],[449,220],
+             [484,220],[484,250],[484,281],[449,281],[415,281],[382,281],[348,281],[314,281],[282,314],
+             [282,348],[282,382],[282,415],[282,449],[282,482],[251,482],[251,449],[251,415],[251,382],
+             [251,348],[251,314],[251,285]):
+      blue[b]=(i)
+      b+=1
+
+
+red_token=token("red")
+green_token=token('green')
+yellow_token=token('yellow')
+blue_token=token('blue')
+
+s=1
+number_array=[]
+array_color=['red','green','yellow','blue']
+n=0
+while True:
+   win.fill((255,255,255))
+   a=area()
+
+   for events in pygame.event.get():
+      if events.type==pygame.QUIT:
+         run=False
+
+
+   def generate_num():
+      if len(number_array)<2:
+         dn=random.randint(1,6)
+         if dn==6:
+            number_array.append(dn)   
+      elif len(number_array)==2:
+         dn=random.randint(1,5)
+         number_array.clear()
+      return dn
+
+   click=pygame.mouse.get_pressed()
+   if click[0]==1 and s==1:
+      s=0
+
+      dice_number=generate_num()
+      print(dice_number,array_color[n])
+      if array_color[n]=='red':
+         check=red_token.move(dice_number,red)
+      elif array_color[n]=='green':
+         check=green_token.move(dice_number,green)
+      elif array_color[n]=='yellow':
+         check=yellow_token.move(dice_number,yellow)
+      elif array_color[n]=='blue':
+         check=blue_token.move(dice_number,blue)
+      if check=='norep':
+         n+=1
+         if n==4:
+            n=0
+      
+
+      
+   elif click[0]==0:
+      s=1
+
+   call_update()
